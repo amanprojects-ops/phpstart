@@ -1,7 +1,7 @@
 {
     "name": "amanprojects/phpstart",
     "description": "PHP project scaffolding CLI — create production-ready PHP structures in one command",
-    "type": "project",
+    "type": "library",
     "license": "MIT",
     "version": "1.0.0",
     "authors": [
