@@ -1,0 +1,50 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Models;
+
+use {{NAMESPACE}}\Core\Database;
+
+/**
+ * Base Model
+ * 
+ * @package {{NAMESPACE}}\Models
+ */
+abstract class BaseModel
+{
+    protected Database $db;
+    protected string $table;
+    protected string $primaryKey = 'id';
+    
+    public function __construct()
+    {
+        $this->db = Database::getInstance();
+    }
+    
+    public function find(int $id): array|false
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE {$this->primaryKey} = ? LIMIT 1";
+        return $this->db->fetch($sql, [$id]);
+    }
+    
+    public function all(): array
+    {
+        return $this->db->fetchAll("SELECT * FROM {$this->table}");
+    }
+    
+    public function create(array $data): int
+    {
+        return $this->db->insert($this->table, $data);
+    }
+    
+    public function update(int $id, array $data): int
+    {
+        return $this->db->update($this->table, $data, [$this->primaryKey => $id]);
+    }
+    
+    public function delete(int $id): int
+    {
+        return $this->db->delete($this->table, [$this->primaryKey => $id]);
+    }
+}

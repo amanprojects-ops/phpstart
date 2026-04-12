@@ -1,0 +1,26 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Middleware;
+
+use {{NAMESPACE}}\Core\Auth;
+
+/**
+ * Authentication Middleware
+ * 
+ * @package {{NAMESPACE}}\Middleware
+ */
+class AuthMiddleware
+{
+    /**
+     * Handle request
+     */
+    public function handle(): void
+    {
+        if (Auth::guest()) {
+            header('Location: /login');
+            exit;
+        }
+    }
+}

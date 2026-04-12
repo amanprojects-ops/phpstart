@@ -1,0 +1,85 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Core;
+
+/**
+ * View Renderer
+ * 
+ * @package {{NAMESPACE}}\Core
+ */
+class View
+{
+    private static ?string $layout = 'layout/main';
+    private static array $sections = [];
+    private static ?string $currentSection = null;
+    
+    /**
+     * Render view
+     */
+    public static function render(string $name, array $data = []): void
+    {
+        extract($data);
+        
+        $viewPath = VIEWS_PATH . '/' . str_replace('.', '/', $name) . '.php';
+        
+        if (!file_exists($viewPath)) {
+            throw new \RuntimeException("View not found: {$name}");
+        }
+        
+        ob_start();
+        require $viewPath;
+        $content = ob_get_clean();
+        
+        // If layout is set, render with layout
+        if (self::$layout !== null) {
+            $layoutPath = VIEWS_PATH . '/' . str_replace('.', '/', self::$layout) . '.php';
+            
+            if (file_exists($layoutPath)) {
+                self::$sections['content'] = $content;
+                extract($data);
+                require $layoutPath;
+                return;
+            }
+        }
+        
+        echo $content;
+    }
+    
+    /**
+     * Start section
+     */
+    public static function section(string $name): void
+    {
+        self::$currentSection = $name;
+        ob_start();
+    }
+    
+    /**
+     * End section
+     */
+    public static function endSection(): void
+    {
+        if (self::$currentSection !== null) {
+            self::$sections[self::$currentSection] = ob_get_clean();
+            self::$currentSection = null;
+        }
+    }
+    
+    /**
+     * Yield section content
+     */
+    public static function yield(string $name, string $default = ''): void
+    {
+        echo self::$sections[$name] ?? $default;
+    }
+    
+    /**
+     * Set layout
+     */
+    public static function setLayout(?string $layout): void
+    {
+        self::$layout = $layout;
+    }
+}

@@ -1,0 +1,146 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Core;
+
+/**
+ * REST API Router
+ * 
+ * @package {{NAMESPACE}}\Core
+ */
+class Router
+{
+    private array $routes = [];
+    
+    /**
+     * Register GET route
+     */
+    public function get(string $uri, callable $callback): void
+    {
+        $this->addRoute('GET', $uri, $callback);
+    }
+    
+    /**
+     * Register POST route
+     */
+    public function post(string $uri, callable $callback): void
+    {
+        $this->addRoute('POST', $uri, $callback);
+    }
+    
+    /**
+     * Register PUT route
+     */
+    public function put(string $uri, callable $callback): void
+    {
+        $this->addRoute('PUT', $uri, $callback);
+    }
+    
+    /**
+     * Register PATCH route
+     */
+    public function patch(string $uri, callable $callback): void
+    {
+        $this->addRoute('PATCH', $uri, $callback);
+    }
+    
+    /**
+     * Register DELETE route
+     */
+    public function delete(string $uri, callable $callback): void
+    {
+        $this->addRoute('DELETE', $uri, $callback);
+    }
+    
+    /**
+     * Add route to collection
+     */
+    private function addRoute(string $method, string $uri, callable $callback): void
+    {
+        $uri = $this->normalizeUri($uri);
+        $this->routes[] = [
+            'method' => $method,
+            'uri' => $uri,
+            'callback' => $callback,
+        ];
+    }
+    
+    /**
+     * Dispatch current request
+     */
+    public function dispatch(): void
+    {
+        $method = $this->getRequestMethod();
+        $uri = $this->getCurrentUri();
+        
+        foreach ($this->routes as $route) {
+            if ($route['method'] !== $method) {
+                continue;
+            }
+            
+            $params = $this->matchRoute($route['uri'], $uri);
+            
+            if ($params !== false) {
+                call_user_func_array($route['callback'], $params);
+                return;
+            }
+        }
+        
+        // 404 Not Found
+        Response::notFound('Endpoint not found');
+    }
+    
+    /**
+     * Match route pattern against URI
+     */
+    private function matchRoute(string $pattern, string $uri): array|false
+    {
+        $pattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([^/]+)', $pattern);
+        $pattern = '#^' . $pattern . '$#';
+        
+        if (preg_match($pattern, $uri, $matches)) {
+            array_shift($matches);
+            return $matches;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Get current request URI
+     */
+    private function getCurrentUri(): string
+    {
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        $uri = parse_url($uri, PHP_URL_PATH);
+        return $this->normalizeUri($uri);
+    }
+    
+    /**
+     * Get request method (supports method override)
+     */
+    private function getRequestMethod(): string
+    {
+        $method = $_SERVER['REQUEST_METHOD'];
+        
+        // Support PUT/DELETE via POST with _method parameter
+        if ($method === 'POST') {
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (isset($input['_method'])) {
+                $method = strtoupper($input['_method']);
+            }
+        }
+        
+        return $method;
+    }
+    
+    /**
+     * Normalize URI
+     */
+    private function normalizeUri(string $uri): string
+    {
+        $uri = trim($uri, '/');
+        return '/' . $uri;
+    }
+}

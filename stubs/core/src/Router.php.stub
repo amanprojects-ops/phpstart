@@ -1,0 +1,117 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}};
+
+/**
+ * Simple Router
+ * 
+ * Handles HTTP routing with dynamic parameters
+ * 
+ * @package {{NAMESPACE}}
+ */
+class Router
+{
+    private array $routes = [];
+    
+    /**
+     * Register GET route
+     */
+    public function get(string $uri, callable $callback): void
+    {
+        $this->addRoute('GET', $uri, $callback);
+    }
+    
+    /**
+     * Register POST route
+     */
+    public function post(string $uri, callable $callback): void
+    {
+        $this->addRoute('POST', $uri, $callback);
+    }
+    
+    /**
+     * Add route to collection
+     */
+    private function addRoute(string $method, string $uri, callable $callback): void
+    {
+        $uri = $this->normalizeUri($uri);
+        $this->routes[] = [
+            'method' => $method,
+            'uri' => $uri,
+            'callback' => $callback,
+        ];
+    }
+    
+    /**
+     * Dispatch current request
+     */
+    public function dispatch(): void
+    {
+        $method = $_SERVER['REQUEST_METHOD'];
+        $uri = $this->getCurrentUri();
+        
+        foreach ($this->routes as $route) {
+            if ($route['method'] !== $method) {
+                continue;
+            }
+            
+            $params = $this->matchRoute($route['uri'], $uri);
+            
+            if ($params !== false) {
+                call_user_func_array($route['callback'], $params);
+                return;
+            }
+        }
+        
+        // 404 Not Found
+        $this->notFound();
+    }
+    
+    /**
+     * Match route pattern against URI
+     */
+    private function matchRoute(string $pattern, string $uri): array|false
+    {
+        // Convert route pattern to regex
+        $pattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([^/]+)', $pattern);
+        $pattern = '#^' . $pattern . '$#';
+        
+        if (preg_match($pattern, $uri, $matches)) {
+            array_shift($matches); // Remove full match
+            return $matches;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Get current request URI
+     */
+    private function getCurrentUri(): string
+    {
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        $uri = parse_url($uri, PHP_URL_PATH);
+        return $this->normalizeUri($uri);
+    }
+    
+    /**
+     * Normalize URI (remove trailing slash)
+     */
+    private function normalizeUri(string $uri): string
+    {
+        $uri = trim($uri, '/');
+        return '/' . $uri;
+    }
+    
+    /**
+     * Handle 404 Not Found
+     */
+    private function notFound(): void
+    {
+        http_response_code(404);
+        echo '<h1>404 - Page Not Found</h1>';
+        exit;
+    }
+}

@@ -1,0 +1,61 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Core;
+
+/**
+ * HTTP Response Handler
+ * 
+ * @package {{NAMESPACE}}\Core
+ */
+class Response
+{
+    /**
+     * Send response
+     */
+    public function send(string $content, int $code = 200): never
+    {
+        http_response_code($code);
+        echo $content;
+        exit;
+    }
+    
+    /**
+     * Send JSON response
+     */
+    public function json(mixed $data, int $code = 200): never
+    {
+        http_response_code($code);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit;
+    }
+    
+    /**
+     * Redirect to URL
+     */
+    public function redirect(string $url): never
+    {
+        header("Location: {$url}");
+        exit;
+    }
+    
+    /**
+     * Set header
+     */
+    public function setHeader(string $name, string $value): self
+    {
+        header("{$name}: {$value}");
+        return $this;
+    }
+    
+    /**
+     * Set status code
+     */
+    public function setStatusCode(int $code): self
+    {
+        http_response_code($code);
+        return $this;
+    }
+}

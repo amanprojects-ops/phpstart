@@ -1,0 +1,90 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Core;
+
+use {{NAMESPACE}}\Database;
+
+/**
+ * Base Model
+ * 
+ * @package {{NAMESPACE}}\Core
+ */
+abstract class Model
+{
+    protected Database $db;
+    protected string $table;
+    protected string $primaryKey = 'id';
+    protected array $fillable = [];
+    
+    public function __construct()
+    {
+        $this->db = Database::getInstance();
+    }
+    
+    /**
+     * Find by ID
+     */
+    public function find(int $id): array|false
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE {$this->primaryKey} = ? LIMIT 1";
+        return $this->db->fetch($sql, [$id]);
+    }
+    
+    /**
+     * Get all records
+     */
+    public function all(): array
+    {
+        return $this->db->fetchAll("SELECT * FROM {$this->table}");
+    }
+    
+    /**
+     * Create record
+     */
+    public function create(array $data): int
+    {
+        $data = $this->filterFillable($data);
+        return $this->db->insert($this->table, $data);
+    }
+    
+    /**
+     * Update record
+     */
+    public function update(int $id, array $data): int
+    {
+        $data = $this->filterFillable($data);
+        return $this->db->update($this->table, $data, [$this->primaryKey => $id]);
+    }
+    
+    /**
+     * Delete record
+     */
+    public function delete(int $id): int
+    {
+        return $this->db->delete($this->table, [$this->primaryKey => $id]);
+    }
+    
+    /**
+     * Find by conditions
+     */
+    public function where(array $conditions): array
+    {
+        $whereClause = implode(' AND ', array_map(fn($col) => "{$col} = ?", array_keys($conditions)));
+        $sql = "SELECT * FROM {$this->table} WHERE {$whereClause}";
+        return $this->db->fetchAll($sql, array_values($conditions));
+    }
+    
+    /**
+     * Filter fillable fields
+     */
+    private function filterFillable(array $data): array
+    {
+        if (empty($this->fillable)) {
+            return $data;
+        }
+        
+        return array_intersect_key($data, array_flip($this->fillable));
+    }
+}

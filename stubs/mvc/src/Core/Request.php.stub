@@ -1,0 +1,155 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Core;
+
+/**
+ * HTTP Request Handler
+ * 
+ * @package {{NAMESPACE}}\Core
+ */
+class Request
+{
+    private array $data;
+    
+    public function __construct()
+    {
+        $this->data = array_merge($_GET, $_POST);
+    }
+    
+    /**
+     * Get input value
+     */
+    public function input(string $key, mixed $default = null): mixed
+    {
+        return $this->data[$key] ?? $default;
+    }
+    
+    /**
+     * Get all input
+     */
+    public function all(): array
+    {
+        return $this->data;
+    }
+    
+    /**
+     * Get only specified keys
+     */
+    public function only(array $keys): array
+    {
+        return array_intersect_key($this->data, array_flip($keys));
+    }
+    
+    /**
+     * Check if key exists
+     */
+    public function has(string $key): bool
+    {
+        return isset($this->data[$key]);
+    }
+    
+    /**
+     * Get uploaded file
+     */
+    public function file(string $key): ?array
+    {
+        return $_FILES[$key] ?? null;
+    }
+    
+    /**
+     * Get request method
+     */
+    public function method(): string
+    {
+        return $_SERVER['REQUEST_METHOD'];
+    }
+    
+    /**
+     * Check if POST request
+     */
+    public function isPost(): bool
+    {
+        return $this->method() === 'POST';
+    }
+    
+    /**
+     * Check if GET request
+     */
+    public function isGet(): bool
+    {
+        return $this->method() === 'GET';
+    }
+    
+    /**
+     * Validate input
+     */
+    public function validate(array $rules): array
+    {
+        $errors = [];
+        
+        foreach ($rules as $field => $ruleSet) {
+            $ruleList = explode('|', $ruleSet);
+            $value = $this->input($field);
+            
+            foreach ($ruleList as $rule) {
+                if ($rule === 'required' && empty($value)) {
+                    $errors[$field][] = "{$field} is required";
+                }
+                
+                if (str_starts_with($rule, 'min:')) {
+                    $min = (int) substr($rule, 4);
+                    if (strlen($value) < $min) {
+                        $errors[$field][] = "{$field} must be at least {$min} characters";
+                    }
+                }
+                
+                if (str_starts_with($rule, 'max:')) {
+                    $max = (int) substr($rule, 4);
+                    if (strlen($value) > $max) {
+                        $errors[$field][] = "{$field} must not exceed {$max} characters";
+                    }
+                }
+                
+                if ($rule === 'email' && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                    $errors[$field][] = "{$field} must be a valid email";
+                }
+                
+                if ($rule === 'numeric' && !is_numeric($value)) {
+                    $errors[$field][] = "{$field} must be numeric";
+                }
+            }
+        }
+        
+        if (!empty($errors)) {
+            $_SESSION['errors'] = $errors;
+            $_SESSION['_old'] = $this->all();
+            throw new \RuntimeException('Validation failed');
+        }
+        
+        return $this->all();
+    }
+    
+    /**
+     * Get client IP
+     */
+    public function ip(): string
+    {
+        return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    }
+    
+    /**
+     * Get bearer token
+     */
+    public function bearerToken(): ?string
+    {
+        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        
+        if (preg_match('/Bearer\s+(.*)$/i', $header, $matches)) {
+            return $matches[1];
+        }
+        
+        return null;
+    }
+}

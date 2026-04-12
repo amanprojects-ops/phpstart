@@ -1,0 +1,104 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Controllers\Api;
+
+use {{NAMESPACE}}\Core\Request;
+use {{NAMESPACE}}\Core\Response;
+use {{NAMESPACE}}\Models\BaseModel;
+
+/**
+ * User API Controller
+ * 
+ * @package {{NAMESPACE}}\Controllers\Api
+ */
+class UserController
+{
+    private Request $request;
+    
+    public function __construct()
+    {
+        $this->request = new Request();
+    }
+    
+    /**
+     * List all users
+     */
+    public function index(): void
+    {
+        // Example data
+        $users = [
+            ['id' => 1, 'name' => 'John Doe', 'email' => 'john@example.com'],
+            ['id' => 2, 'name' => 'Jane Smith', 'email' => 'jane@example.com'],
+        ];
+        
+        Response::success($users);
+    }
+    
+    /**
+     * Show single user
+     */
+    public function show(int $id): void
+    {
+        // Example data
+        $user = ['id' => $id, 'name' => 'John Doe', 'email' => 'john@example.com'];
+        
+        if ($id > 100) {
+            Response::notFound('User not found');
+        }
+        
+        Response::success($user);
+    }
+    
+    /**
+     * Create new user
+     */
+    public function store(): void
+    {
+        $data = $this->request->all();
+        
+        // Validate
+        if (empty($data['name']) || empty($data['email'])) {
+            Response::error('Name and email are required', 422, [
+                'name' => empty($data['name']) ? ['Name is required'] : [],
+                'email' => empty($data['email']) ? ['Email is required'] : [],
+            ]);
+        }
+        
+        // Example: Create user
+        $user = [
+            'id' => rand(1, 1000),
+            'name' => $data['name'],
+            'email' => $data['email'],
+        ];
+        
+        Response::created($user, 'User created successfully');
+    }
+    
+    /**
+     * Update user
+     */
+    public function update(int $id): void
+    {
+        $data = $this->request->all();
+        
+        // Example: Update user
+        $user = [
+            'id' => $id,
+            'name' => $data['name'] ?? 'John Doe',
+            'email' => $data['email'] ?? 'john@example.com',
+        ];
+        
+        Response::success($user, 200, 'User updated successfully');
+    }
+    
+    /**
+     * Delete user
+     */
+    public function destroy(int $id): void
+    {
+        // Example: Delete user
+        Response::success(['id' => $id], 200, 'User deleted successfully');
+    }
+}

@@ -1,0 +1,86 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Core;
+
+/**
+ * API Middleware
+ * 
+ * @package {{NAMESPACE}}\Core
+ */
+class Middleware
+{
+    /**
+     * Apply CORS headers
+     */
+    public static function cors(): void
+    {
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+        
+        header("Access-Control-Allow-Origin: {$origin}");
+        header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+        header('Access-Control-Allow-Credentials: true');
+        header('Access-Control-Max-Age: 86400');
+        
+        // Handle preflight requests
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            http_response_code(200);
+            exit;
+        }
+    }
+    
+    /**
+     * Extract bearer token
+     */
+    public static function bearerToken(): ?string
+    {
+        $request = new Request();
+        return $request->bearerToken();
+    }
+    
+    /**
+     * Auth guard - require valid token
+     */
+    public static function authGuard(): void
+    {
+        $token = self::bearerToken();
+        
+        if (empty($token)) {
+            Response::unauthorized('Authentication required');
+        }
+        
+        // TODO: Validate token against database or JWT
+        // For now, just check if token exists
+    }
+    
+    /**
+     * Rate limiting (simple implementation)
+     */
+    public static function rateLimit(int $maxRequests = 60, int $perSeconds = 60): void
+    {
+        session_start();
+        
+        $key = 'rate_limit_' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+        $now = time();
+        
+        if (!isset($_SESSION[$key])) {
+            $_SESSION[$key] = ['count' => 1, 'start' => $now];
+            return;
+        }
+        
+        $data = $_SESSION[$key];
+        
+        if ($now - $data['start'] > $perSeconds) {
+            $_SESSION[$key] = ['count' => 1, 'start' => $now];
+            return;
+        }
+        
+        if ($data['count'] >= $maxRequests) {
+            Response::error('Rate limit exceeded', 429);
+        }
+        
+        $_SESSION[$key]['count']++;
+    }
+}

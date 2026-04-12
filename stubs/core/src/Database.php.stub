@@ -1,0 +1,145 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}};
+
+use PDO;
+use PDOException;
+use PDOStatement;
+
+/**
+ * Database Connection Handler
+ * 
+ * PDO Singleton with query helpers
+ * 
+ * @package {{NAMESPACE}}
+ */
+class Database
+{
+    private static ?Database $instance = null;
+    private PDO $pdo;
+    
+    private function __construct()
+    {
+        $dsn = sprintf(
+            '%s:host=%s;port=%s;dbname=%s;charset=%s',
+            DB_CONNECTION,
+            DB_HOST,
+            DB_PORT,
+            DB_DATABASE,
+            DB_CHARSET
+        );
+        
+        try {
+            $this->pdo = new PDO($dsn, DB_USERNAME, DB_PASSWORD, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]);
+        } catch (PDOException $e) {
+            throw new \RuntimeException('Database connection failed: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Get singleton instance
+     */
+    public static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        
+        return self::$instance;
+    }
+    
+    /**
+     * Execute query and return statement
+     */
+    public function query(string $sql, array $params = []): PDOStatement
+    {
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            return $stmt;
+        } catch (PDOException $e) {
+            throw new \RuntimeException('Query failed: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Fetch single row
+     */
+    public function fetch(string $sql, array $params = []): array|false
+    {
+        return $this->query($sql, $params)->fetch();
+    }
+    
+    /**
+     * Fetch all rows
+     */
+    public function fetchAll(string $sql, array $params = []): array
+    {
+        return $this->query($sql, $params)->fetchAll();
+    }
+    
+    /**
+     * Insert record and return last insert ID
+     */
+    public function insert(string $table, array $data): int
+    {
+        $columns = implode(', ', array_keys($data));
+        $placeholders = implode(', ', array_fill(0, count($data), '?'));
+        
+        $sql = "INSERT INTO {$table} ({$columns}) VALUES ({$placeholders})";
+        $this->query($sql, array_values($data));
+        
+        return (int) $this->pdo->lastInsertId();
+    }
+    
+    /**
+     * Update records and return affected rows
+     */
+    public function update(string $table, array $data, array $where): int
+    {
+        $set = implode(', ', array_map(fn($col) => "{$col} = ?", array_keys($data)));
+        $whereClause = implode(' AND ', array_map(fn($col) => "{$col} = ?", array_keys($where)));
+        
+        $sql = "UPDATE {$table} SET {$set} WHERE {$whereClause}";
+        $params = array_merge(array_values($data), array_values($where));
+        
+        $stmt = $this->query($sql, $params);
+        return $stmt->rowCount();
+    }
+    
+    /**
+     * Delete records and return affected rows
+     */
+    public function delete(string $table, array $where): int
+    {
+        $whereClause = implode(' AND ', array_map(fn($col) => "{$col} = ?", array_keys($where)));
+        
+        $sql = "DELETE FROM {$table} WHERE {$whereClause}";
+        $stmt = $this->query($sql, array_values($where));
+        
+        return $stmt->rowCount();
+    }
+    
+    /**
+     * Execute transaction
+     */
+    public function transaction(callable $callback): mixed
+    {
+        $this->pdo->beginTransaction();
+        
+        try {
+            $result = $callback($this);
+            $this->pdo->commit();
+            return $result;
+        } catch (\Exception $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+}

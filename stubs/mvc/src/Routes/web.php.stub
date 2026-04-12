@@ -1,0 +1,27 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Web Routes
+ * 
+ * @var {{NAMESPACE}}\Router $router
+ */
+
+use {{NAMESPACE}}\Controllers\HomeController;
+
+// Home route
+$router->get('/', function() {
+    $controller = new HomeController();
+    $controller->index();
+});
+
+// About route
+$router->get('/about', function() {
+    view('about', ['title' => 'About Us']);
+});
+
+// Example dynamic route
+$router->get('/user/{id}', function($id) {
+    echo "User ID: " . htmlspecialchars($id);
+});

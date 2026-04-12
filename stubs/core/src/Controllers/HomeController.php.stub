@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Controllers;
+
+/**
+ * Home Controller
+ * 
+ * @package {{NAMESPACE}}\Controllers
+ */
+class HomeController
+{
+    public function index(): void
+    {
+        $data = [
+            'title' => 'Welcome to ' . APP_NAME,
+            'message' => 'Your PHP application is ready!',
+        ];
+        
+        view('home', $data);
+    }
+}

@@ -1,0 +1,66 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}}\Core;
+
+use {{NAMESPACE}}\Router;
+
+/**
+ * Application Bootstrap
+ * 
+ * @package {{NAMESPACE}}\Core
+ */
+class App
+{
+    private Router $router;
+    private array $middleware = [];
+    
+    public function __construct()
+    {
+        $this->router = new Router();
+        Session::start();
+    }
+    
+    /**
+     * Register middleware
+     */
+    public function middleware(string $middleware): self
+    {
+        $this->middleware[] = $middleware;
+        return $this;
+    }
+    
+    /**
+     * Load routes
+     */
+    public function loadRoutes(string $routesFile): self
+    {
+        $router = $this->router;
+        require $routesFile;
+        return $this;
+    }
+    
+    /**
+     * Run application
+     */
+    public function run(): void
+    {
+        // Execute middleware
+        foreach ($this->middleware as $middleware) {
+            $instance = new $middleware();
+            $instance->handle();
+        }
+        
+        // Dispatch router
+        $this->router->dispatch();
+    }
+    
+    /**
+     * Get router instance
+     */
+    public function getRouter(): Router
+    {
+        return $this->router;
+    }
+}
