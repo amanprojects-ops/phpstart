@@ -21,7 +21,7 @@ use AmanProjects\PhpStart\Commands\CommandInterface;
  */
 class Application
 {
-    private const VERSION = '1.1.0';
+    private const VERSION = '1.1.1';
     
     private Input $input;
     private array $commands = [];
