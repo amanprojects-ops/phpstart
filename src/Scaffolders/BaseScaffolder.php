@@ -148,4 +148,44 @@ abstract class BaseScaffolder implements ScaffolderInterface
     {
         return $type . DIRECTORY_SEPARATOR;
     }
+    
+    /**
+     * Create web-based installation wizard
+     */
+    protected function createInstaller(): void
+    {
+        Output::info('Setting up installation wizard...');
+        
+        $commonPath = 'common' . DIRECTORY_SEPARATOR . 'install' . DIRECTORY_SEPARATOR;
+        
+        $this->writeFile(
+            'install/index.php',
+            $this->loadStub($commonPath . 'index.php.stub')
+        );
+        
+        $this->writeFile(
+            'install/.htaccess',
+            $this->loadStub($commonPath . '.htaccess.stub')
+        );
+    }
+    
+    /**
+     * Create database backup & restore panel
+     */
+    protected function createBackupPanel(): void
+    {
+        Output::info('Setting up backup panel...');
+        
+        $commonPath = 'common' . DIRECTORY_SEPARATOR . 'backup' . DIRECTORY_SEPARATOR;
+        
+        $this->writeFile(
+            'backup/index.php',
+            $this->loadStub($commonPath . 'index.php.stub')
+        );
+        
+        $this->writeFile(
+            'backup/.htaccess',
+            $this->loadStub($commonPath . '.htaccess.stub')
+        );
+    }
 }

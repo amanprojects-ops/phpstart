@@ -1,0 +1,7 @@
+# ── Installation Wizard Security ──────────────────────────────────────────────
+# Protect install.lock from direct download
+
+<Files "install.lock">
+    Order allow,deny
+    Deny from all
+</Files>

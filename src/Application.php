@@ -9,6 +9,7 @@ use AmanProjects\PhpStart\Console\Output;
 use AmanProjects\PhpStart\Commands\NewCommand;
 use AmanProjects\PhpStart\Commands\ListCommand;
 use AmanProjects\PhpStart\Commands\HelpCommand;
+use AmanProjects\PhpStart\Commands\VersionCommand;
 use AmanProjects\PhpStart\Commands\CommandInterface;
 
 /**
@@ -20,7 +21,7 @@ use AmanProjects\PhpStart\Commands\CommandInterface;
  */
 class Application
 {
-    private const VERSION = '1.0.0';
+    private const VERSION = '1.1.0';
     
     private Input $input;
     private array $commands = [];
@@ -40,6 +41,7 @@ class Application
             'new' => new NewCommand($this->input),
             'list' => new ListCommand($this->input),
             'help' => new HelpCommand($this->input),
+            'version' => new VersionCommand($this->input),
         ];
     }
     

@@ -23,6 +23,10 @@ class CorePhpScaffolder extends BaseScaffolder
         // Generate files from stubs
         $this->generateFiles();
         
+        // Generate installer & backup panel
+        $this->createInstaller();
+        $this->createBackupPanel();
+        
         // Initialize git
         $this->initGit();
         
@@ -48,6 +52,9 @@ class CorePhpScaffolder extends BaseScaffolder
             'storage/logs',
             'storage/cache',
             'storage/uploads',
+            'storage/backups',
+            'install',
+            'backup',
         ];
         
         $this->createDirectories($directories);

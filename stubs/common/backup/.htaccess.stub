@@ -1,0 +1,12 @@
+# ── Backup Panel Security ─────────────────────────────────────────────────────
+# Block direct access to SQL backup files
+
+<Files "*.sql">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "*.gz">
+    Order allow,deny
+    Deny from all
+</Files>

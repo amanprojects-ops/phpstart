@@ -23,6 +23,10 @@ class ApiScaffolder extends BaseScaffolder
         // Generate files from stubs
         $this->generateFiles();
         
+        // Generate installer & backup panel
+        $this->createInstaller();
+        $this->createBackupPanel();
+        
         // Initialize git
         $this->initGit();
         
@@ -43,6 +47,9 @@ class ApiScaffolder extends BaseScaffolder
             'src/Middleware',
             'config',
             'storage/logs',
+            'storage/backups',
+            'install',
+            'backup',
         ];
         
         $this->createDirectories($directories);
