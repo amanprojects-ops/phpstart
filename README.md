@@ -11,6 +11,9 @@ A powerful command-line tool to scaffold production-ready PHP projects in second
 - 📝 Complete with routing, database, and MVC structure
 - 🔐 Built-in authentication and session management
 - 🌐 REST API with CORS and middleware support
+- 🛠️ **Web-Based Installer:** A premium 5-step installer wizard shipped by default for easy setup
+- 🔄 **Database Backup Panel:** One-click DB backup and restore utility with auto-rotation
+- 🚀 **Version Command:** Manage application & package versions easily via CLI
 - 📚 Comprehensive documentation
 
 ## Installation
@@ -139,6 +142,7 @@ phpstart new myblog --type=laravel
 ```bash
 phpstart new <name>     # Create a new project
 phpstart list           # List all project types
+phpstart version        # View, bump or set application version
 phpstart help           # Show help information
 ```
 
@@ -588,7 +592,9 @@ myproject/
 │   ├── Views/       # Views
 │   └── Helpers/     # Helper functions
 ├── config/          # Configuration files
-├── storage/         # Logs, cache, uploads
+├── install/         # Web-based installation wizard
+├── backup/          # Database backup & restore panel
+├── storage/         # Logs, cache, uploads, backups
 └── assets/          # CSS, JS, images
 ```
 
